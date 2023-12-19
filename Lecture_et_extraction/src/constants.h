@@ -7,7 +7,7 @@
 
 #include <cmath>
 
-const int FFT_SIZE = 1024;
+const int FFT_SIZE = 512;
 const float PI = M_PI;
 const int MAGIC_NB = 0x2e736e64;
 
