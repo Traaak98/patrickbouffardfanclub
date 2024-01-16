@@ -16,6 +16,7 @@ struct svm_model *model;
 
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 
+<<<<<<< HEAD
 std::ofstream train("../data/dataset_train.txt");
 std::ofstream test("../data/dataset_test.txt");
 // label index1:value1 index2:value2 ... \n
@@ -95,7 +96,7 @@ void svm(std::string& results_data, std::string& results_labels, std::map<std::s
     param.svm_type = C_SVC;
     param.kernel_type = RBF;
     param.degree = 3;
-    param.gamma = 0.5;	// 1/num_features
+    param.gamma = 0.05;	// 1/num_features
     param.coef0 = 0;
     param.nu = 0.5;
     param.cache_size = 100;
@@ -184,10 +185,10 @@ int main(int argc, char** argv) {
     labels_map["pop"] = 8;
     labels_map["reggae"] = 9;
     labels_map["rock"] = 10;
-
+    
+    formater_dataset(train, test);
     // svm(results_data, results_labels, labels_map);
     // do_cross_validation();
-    formater_dataset(train, test);
 
     return 0;
 }
