@@ -1,11 +1,9 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.16)
 project(cnn)
 
 set(CMAKE_BUILD_TYPE debug) # compilation en mode debug
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++11") # options
-set(TFLITE_DIR "/src/tensorflow/lite")
-
-include_directories("${TFLITE_DIR}")
+set(CMAKE_CXX_STANDARD 14)
 
 file(# liste des fichiers à compiler
     GLOB_RECURSE # recherche récursive
@@ -13,6 +11,10 @@ file(# liste des fichiers à compiler
     src/*.cpp # forme des fichiers à rechercher
 )
 
-link_directories("${TFLITE_DIR}")
+add_subdirectory(
+    "/media/apolline/B2C2CC8EC2CC586D/apolline/Ecole/ENSTA/M2/tensorflow/tensorflow_src/tensorflow/lite"
+    "${CMAKE_CURRENT_BINARY_DIR}/tensorflow-lite" EXCLUDE_FROM_ALL)
 
 add_executable(${PROJECT_NAME} ${source_files})
+
+target_link_libraries(${PROJECT_NAME} tensorflow-lite)
