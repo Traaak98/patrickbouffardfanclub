@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 
 # Mise en place des datas :
-data=pd.read_csv('dataset.csv', header=None)
+data=pd.read_csv('../data/dataset.csv', header=None)
 X=data.iloc[:,:-1]
 X=np.asarray(X)
 y=data.iloc[:, -1]
@@ -23,7 +23,7 @@ X_scaled = scaler_X.fit_transform(X)
 le = LabelEncoder()
 y_val = le.fit_transform(y)
 
-X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X_scaled, y_val, test_size=0.25, random_state=1)
+X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y_val, test_size=0.25, random_state=1)
 print(X_train.shape) # (750, 1024)
 print(X_test.shape) # (250, 1024)
 print(y_train.shape) # (750,)

@@ -14,6 +14,7 @@
 #include <string>
 
 void build_vectors_data(std::vector<int> &labels, std::vector<std::vector<double>> &data, std::string results_labels, std::string results_data, std::map<std::string, int> labels_map );
+std::unique_ptr<tflite::Interpreter> LoadModel(const char* model_path);
 
 int main(int argc, char** argv) {
     // DATA filenames
@@ -36,34 +37,47 @@ int main(int argc, char** argv) {
     // Build vectors data
     std::vector<int> labels;
     std::vector<std::vector<double>> data;
-    //build_vectors_data(labels, data, results_labels, results_data, labels_map);
+    build_vectors_data(labels, data, results_labels, results_data, labels_map);
+    std::cout << "Data built" << std::endl;
 
-//    // Construire le modèle CNN
-//    std::unique_ptr<tflite::Interpreter> interpreter;
-//    tflite::ops::builtin::BuiltinOpResolver resolver;
-//    tflite::InterpreterBuilder file_builder(tflite::FlatBufferModel::BuildFromFile("model.tflite"), resolver);
-//    file_builder(&interpreter);
-//    interpreter->AllocateTensors();
-//
-//    // Copiez les données audio dans le tenseur d'entrée du modèle
-//    float *inputTensor = interpreter->typed_input_tensor<float>(0);
-//
-//    for (size_t i = 0; i < data.size(); ++i) {
-//        for (size_t j = 0; j < data[i].size(); ++j) {
-//            inputTensor[i * data[i].size() + j] = static_cast<float>(data[i][j]);
-//        }
-//    }
-//
-//    // Effectuer l'inférence
-//    interpreter->Invoke();
-//
-//    // Récupérer les résultats de l'inférence
-//    float *outputTensor = interpreter->typed_output_tensor<float>(0);
-//
-//    // Afficher les résultats (à adapter selon le format de sortie de votre modèle)
-//    for (int i = 0; i < interpreter->outputs()[0] -> bytes / sizeof(float); i++) {
-//        std::cout << "Classe " << i << ": " << outputTensor[i] << std::endl;
-//    }
+    // Construire le modèle CNN
+    std::unique_ptr<tflite::Interpreter> interpreter = LoadModel("../model/model.tflite");
+    std::cout << "Model loaded" << std::endl;
+
+    // Copiez les données audio dans le tenseur d'entrée du modèle
+    float *inputTensor = interpreter->typed_input_tensor<float>(0);
+    std::cout << "Input tensor loaded" << std::endl;
+
+    for (size_t i = 0; i < data.size(); ++i) {
+        for (size_t j = 0; j < data[i].size(); ++j) {
+            inputTensor[i * data[i].size() + j] = static_cast<float>(data[i][j]);
+        }
+    }
+    std::cout << "Input tensor filled" << std::endl;
+
+    // Effectuer l'inférence
+    interpreter->Invoke();
+    std::cout << "Inference done" << std::endl;
+
+    // Récupérer les résultats de la prédiction
+    int output_tensor_index = interpreter->outputs()[0];
+    std::cout << "Output tensor index : " << output_tensor_index << std::endl;
+    TfLiteIntArray* output_dims = interpreter->tensor(output_tensor_index)->dims;
+    std::cout << "Output tensor dims : " << output_dims->size << std::endl;
+    int output_size = 1;
+    for (int i = 0; i < output_dims->size; i++) {
+        output_size *= output_dims->data[i];
+    }
+    std::cout << "Output tensor size : " << output_size << std::endl;
+
+    // Récupérer les résultats de l'inférence
+    float *outputTensor = interpreter->typed_output_tensor<float>(0);
+    std::cout << "Output tensor loaded" << std::endl;
+
+    // Afficher les résultats (à adapter selon le format de sortie de votre modèle)
+    for (int i = 0; i < output_size; i++) {
+        std::cout << "Classe " << i << ": " << outputTensor[i] << std::endl;
+    }
 
     return 0;
 }
@@ -88,4 +102,25 @@ void build_vectors_data(std::vector<int> &labels, std::vector<std::vector<double
         std::getline(results_data_file, cell, '\n');
         data.push_back(data_line);
     }
+}
+
+std::unique_ptr<tflite::Interpreter> LoadModel(const char* model_path) {
+    std::unique_ptr<tflite::FlatBufferModel> model =
+            tflite::FlatBufferModel::BuildFromFile(model_path);
+
+    if (!model) {
+        std::cerr << "Failed to load the model." << std::endl;
+        return nullptr;
+    }
+
+    tflite::ops::builtin::BuiltinOpResolver resolver;
+    tflite::InterpreterBuilder builder(*model, resolver);
+
+    std::unique_ptr<tflite::Interpreter> interpreter;
+    if (builder(&interpreter) != kTfLiteOk) {
+        std::cerr << "Failed to build the interpreter." << std::endl;
+        return nullptr;
+    }
+
+    return interpreter;
 }

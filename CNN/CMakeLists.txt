@@ -11,6 +11,8 @@ file(# liste des fichiers à compiler
     src/*.cpp # forme des fichiers à rechercher
 )
 
+include_directories(data model)
+
 add_subdirectory(
     "/media/apolline/B2C2CC8EC2CC586D/apolline/Ecole/ENSTA/M2/tensorflow/tensorflow_src/tensorflow/lite"
     "${CMAKE_CURRENT_BINARY_DIR}/tensorflow-lite" EXCLUDE_FROM_ALL)
