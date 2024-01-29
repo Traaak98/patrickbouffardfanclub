@@ -35,7 +35,8 @@ Data* load_data_from_file(std::ifstream& data_file) {
         if (colonPos != std::string::npos) {
             int index = std::stoi(token.substr(0, colonPos));
             float value = std::stof(token.substr(colonPos + 1));
-            data->values[index+1] = value;
+            data->values[index] = value;
+            std::cout << index << std::endl;
         }
     }
 
@@ -58,6 +59,8 @@ int main(int argc, char* argv[]) {
     std::int32_t j = decision_tree_predict(data->values, features_length);
     std::cout << "j: " << j << std::endl;
     std::cout << "pas encore mort"<< std::endl;
+
+    // delete data;
     return 0;
 };
 

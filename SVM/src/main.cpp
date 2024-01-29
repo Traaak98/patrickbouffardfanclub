@@ -16,9 +16,50 @@ struct svm_model *model;
 
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 
-std::ofstream train("../data/dataset_train.txt");
-std::ofstream test("../data/dataset_test.txt");
+std::ofstream train("../data/dataset_train.csv");
+std::ofstream test("../data/dataset_test.csv");
+>>>>>>> 09c86667a719976cf494ec2fdb1884b9e562690a
 // label index1:value1 index2:value2 ... \n
+
+void dataset_to_csv(std::ofstream& out_dataset1, std::ofstream& out_dataset2) {
+    std::ifstream results_data_file("./dataset.scaled");
+
+    std::string cell;
+    int label;
+
+    for (int genre=0; genre < 10; ++genre) {
+        for (int line = 0; line < 67; ++line) {
+            std::getline(results_data_file, cell, ' ');    // class
+            //std::cout << cell << std::endl;
+            label = std::stoi(cell);
+
+            for (int i = 0; i < 1024; ++i) {
+                std::getline(results_data_file, cell, ' ');
+                // from i:feature to feature
+                cell = cell.substr(cell.find(':') + 1, cell.size() - 2);
+                std::cout << cell << std::endl;
+                out_dataset1 << std::stod(cell) << ",";
+            }
+            out_dataset1 << label << std::endl;
+        }
+        for (int line = 0; line < 33; ++line) {
+            std::getline(results_data_file, cell, ' ');    // class
+            label = std::stoi(cell);
+
+            for (int i = 0; i < 1024; ++i) {
+                std::getline(results_data_file, cell, ' ');
+                // from i:feature to feature
+                cell = cell.substr(cell.find(':') + 1, cell.size() - 2);
+                out_dataset2 << std::stod(cell) << ",";
+            }
+
+            out_dataset2 << label << std::endl;
+        }
+    }
+
+    out_dataset1.close();
+    out_dataset2.close();
+}
 
 void formater_dataset(std::ofstream& out_dataset1, std::ofstream& out_dataset2){
     std::ifstream results_data_file("../data/dataset.csv");
