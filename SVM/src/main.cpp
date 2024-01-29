@@ -135,7 +135,7 @@ void svm(std::string& results_data, std::string& results_labels, std::map<std::s
     param.svm_type = C_SVC;
     param.kernel_type = RBF;
     param.degree = 3;
-    param.gamma = 0.5;	// 1/num_features
+    param.gamma = 0.05;	// 1/num_features
     param.coef0 = 0;
     param.nu = 0.5;
     param.cache_size = 100;
@@ -224,11 +224,15 @@ int main(int argc, char** argv) {
     labels_map["pop"] = 8;
     labels_map["reggae"] = 9;
     labels_map["rock"] = 10;
-
+    
+    formater_dataset(train, test);
     // svm(results_data, results_labels, labels_map);
     // do_cross_validation();
+<<<<<<< HEAD
     //formater_dataset(train, test);
     dataset_to_csv(train, test);
+=======
+>>>>>>> f21ec76eebee3ed0b52ffa7e9ac0d156a85bba21
 
     return 0;
 }
