@@ -23,20 +23,22 @@ X_scaled = scaler_X.fit_transform(X)
 le = LabelEncoder()
 y_val = le.fit_transform(y)
 
-X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y_val, test_size=0.25, random_state=1)
+X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X_scaled, y_val, test_size=0.25, random_state=1)
 print(X_train.shape) # (750, 1024)
 print(X_test.shape) # (250, 1024)
 print(y_train.shape) # (750,)
 print(y_test.shape) # (250,)
 
-def create_model(filters=64, kernel_size=3, pool_size=2, dense_units=128, dropout_rate=0.5):
+def create_model(filters=64, kernel_size=3, filters2 = 34, pool_size=2, dense_units=128, dropout_rate=0.5, dropout_rate2=0.5):
     model = models.Sequential([
         layers.Input(shape=(1024,1)),
         layers.Conv1D(filters, kernel_size, activation='relu'),
+        layers.Conv1D(filters2, kernel_size, activation='relu'),
         layers.MaxPooling1D(pool_size),
         layers.Flatten(),
-        layers.Dense(dense_units, activation='relu'),
         layers.Dropout(dropout_rate),
+        layers.Dense(dense_units, activation='relu'),
+        layers.Dropout(dropout_rate2),
         layers.Dense(10, activation='softmax'),
     ])
     return model
@@ -49,14 +51,14 @@ param_grid = {
     'dropout_rate': [0.3, 0.5, 0.7]
 }
 
-model = create_model(filters=32, kernel_size=5, pool_size=2, dense_units=128, dropout_rate=0.7)
+model = create_model(filters = 64, filters2=32, kernel_size=3, pool_size=2, dense_units=128, dropout_rate=0.2, dropout_rate2=0.7)
 
 model.summary()
 
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
 
-result = model.fit(X_train, y_train, epochs=50, validation_data=(X_test, y_test))
+result = model.fit(X_train, y_train, epochs=100, validation_data=(X_test, y_test))
 
 metrics = result.history
 plt.figure(figsize=(16,6))

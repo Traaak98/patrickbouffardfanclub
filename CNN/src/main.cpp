@@ -14,8 +14,6 @@
 #include <string>
 
 void build_vectors_data(std::vector<int> &labels, std::vector<std::vector<double>> &data, std::string results_labels, std::string results_data, std::map<std::string, int> labels_map );
-std::unique_ptr<tflite::Interpreter> LoadModel(const char* model_path);
-
 int main(int argc, char** argv) {
     // DATA filenames
     std::string results_labels = "../data/labels.csv";
@@ -41,18 +39,30 @@ int main(int argc, char** argv) {
     std::cout << "Data built" << std::endl;
 
     // Construire le modèle CNN
-    std::unique_ptr<tflite::Interpreter> interpreter = LoadModel("../model/model.tflite");
+    std::unique_ptr<tflite::FlatBufferModel> model =
+            tflite::FlatBufferModel::BuildFromFile("../model/model.tflite");
+
+    if (!model) {
+        std::cerr << "Failed to load the model." << std::endl;
+        exit(0);
+    }
+
+    tflite::ops::builtin::BuiltinOpResolver resolver;
+    std::unique_ptr<tflite::Interpreter> interpreter;
+    tflite::InterpreterBuilder(*model.get(), resolver)(&interpreter);
+    interpreter->AllocateTensors();
+
     std::cout << "Model loaded" << std::endl;
 
     // Copiez les données audio dans le tenseur d'entrée du modèle
     float *inputTensor = interpreter->typed_input_tensor<float>(0);
     std::cout << "Input tensor loaded" << std::endl;
+    std::cout << interpreter->typed_input_tensor<float>(0) << std::endl;
 
-    for (size_t i = 0; i < data.size(); ++i) {
-        for (size_t j = 0; j < data[i].size(); ++j) {
-            inputTensor[i * data[i].size() + j] = static_cast<float>(data[i][j]);
-        }
+    for (int i = 0; i < 1024; ++i) {
+        inputTensor[i] = static_cast<float>(data[0][i]);
     }
+
     std::cout << "Input tensor filled" << std::endl;
 
     // Effectuer l'inférence
@@ -104,23 +114,3 @@ void build_vectors_data(std::vector<int> &labels, std::vector<std::vector<double
     }
 }
 
-std::unique_ptr<tflite::Interpreter> LoadModel(const char* model_path) {
-    std::unique_ptr<tflite::FlatBufferModel> model =
-            tflite::FlatBufferModel::BuildFromFile(model_path);
-
-    if (!model) {
-        std::cerr << "Failed to load the model." << std::endl;
-        return nullptr;
-    }
-
-    tflite::ops::builtin::BuiltinOpResolver resolver;
-    tflite::InterpreterBuilder builder(*model, resolver);
-
-    std::unique_ptr<tflite::Interpreter> interpreter;
-    if (builder(&interpreter) != kTfLiteOk) {
-        std::cerr << "Failed to build the interpreter." << std::endl;
-        return nullptr;
-    }
-
-    return interpreter;
-}
