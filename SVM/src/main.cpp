@@ -16,7 +16,6 @@ struct svm_model *model;
 
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 
-<<<<<<< HEAD
 std::ofstream train("../data/dataset_train.txt");
 std::ofstream test("../data/dataset_test.txt");
 // label index1:value1 index2:value2 ... \n
