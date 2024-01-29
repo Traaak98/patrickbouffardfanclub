@@ -51,9 +51,9 @@ print('accuracy: ', accuracy)
 print('cross_val: ', cross_val)
 
 # # Convert to emlearn
-path = 'decision_tree.h'
-c_code = emlearn.convert(estimator, method='inline',dtype='float')
-c_code.save(file=path, name='decision_tree')
+# path = 'decision_tree.h'
+# c_code = emlearn.convert(estimator, method='inline',dtype='float')
+# c_code.save(file=path, name='decision_tree')
 
 
 
