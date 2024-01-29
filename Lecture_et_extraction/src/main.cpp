@@ -6,52 +6,16 @@
 #include <cassert>
 #include <vector>
 #include <complex>
+#include <map>
 #include "au_utils.h"
 #include "constants.h"
 #include "fft_utils.h"
 
 
-std::string audio_test = "../../Audio/blues.00000.au";
-std::vector<std::string> music_styles = {"blue", "clas", "coun", "disc", "hiph", "jazz", "meta", "pop.", "regg", "rock"};
 
-//void load_and_save(std::string& filename) {
-//    std::ifstream file;
-//
-//// Ouverture en lecture et verification du magic number
-//    file.open(filename.c_str(), std::ios::binary | std::ios::in);
-//    if(!file.is_open())
-//        throw;
-//
-//    assert(read32Bits(file) == MAGIC_NB);
-//    int data_offset = read32Bits(file);
-//    int data_size = read32Bits(file);
-//
-//    std::cout << "data_offset: " << data_offset << std::endl;
-//    std::cout << "data_size: " << data_size << std::endl;
-//
-//// Placer le curseur au bon endroit
-//    file.seekg(0, std::ios::beg);
-//    file.seekg(data_offset, std::ios::beg);
-//    int end_file = data_offset + data_size;
-//    long curseur = file.tellg();
-//
-//// Creation tableau a remplir
-////    int data[data_size];
-////    int i = 0;
-//    std::ofstream results("signal.csv");
-//    // alloc dynamique auto* data2 = new int16_t[data_size];
-//    while (curseur < end_file) {
-//        results << readSample(file);
-//        results << ",";
-//        curseur = file.tellg();
-//    }
-//
-//// Close file and write data in .csv for testing purposes
-//    file.close();
-//    results.seekp(-1, std::ios::end);
-//    results.write("", 1); // erase last comma
-//    results.close();
-//}
+std::string audio_test = "../../Audio/blues.00000.au";
+std::vector<std::string> music_styles = {"blue", "clas", "coun", "disc", "hiph", "jazz", "meta", "pop/", "regg", "rock"};
+
 
 void load_and_fft(std::string& filename, std::vector<float>& mean, std::vector<float>& sigma) {
     std::ifstream file;
@@ -124,16 +88,16 @@ void load_and_fft(std::string& filename, std::vector<float>& mean, std::vector<f
         mean[n] /= j;
         sigma[n] = std::sqrt(sigma[n]) / j;
     }
-    std::cout << "fin" << std::endl;
-    std::cout << mean.size() << " " << sigma.size() << std::endl;
-    std::cout << mean[FFT_SIZE / 2] << " " << sigma[FFT_SIZE / 2] << std::endl;
+//    std::cout << "fin" << std::endl;
+//    std::cout << mean.size() << " " << sigma.size() << std::endl;
+//    std::cout << mean[FFT_SIZE / 2] << " " << sigma[FFT_SIZE / 2] << std::endl;
 
 }
 
 int main(int argc, char** argv) {
 
     if (argc != 3) {
-        std::cout << "Usage: ./main <audio_file> <features_file>" << std::endl;
+        std::cout << "Usage: ./load_and_extract <audio_file> <features_file>" << std::endl;
 
         std::cout << "Used to extract mean and standard deviation from .au audio files." << std::endl;
         std::cout << "The 1024 features are appended to a features file with the format '<index1>:<value1> <index2>:<value2> ...', cf libsvm." << std::endl;
@@ -145,9 +109,9 @@ int main(int argc, char** argv) {
     std::vector<float> mean, sigma;
     mean.resize(FFT_SIZE);
     sigma.resize(FFT_SIZE);
-    std::cout << "debut" << std::endl;
-    std::cout << mean.size() << " " << sigma.size() << std::endl;
-    std::cout << mean[FFT_SIZE / 2] << " " << sigma[FFT_SIZE / 2] << std::endl;
+//    std::cout << "debut" << std::endl;
+//    std::cout << mean.size() << " " << sigma.size() << std::endl;
+//    std::cout << mean[FFT_SIZE / 2] << " " << sigma[FFT_SIZE / 2] << std::endl;
 
     std::string audio_file = argv[1];
     load_and_fft(audio_file, mean, sigma);
@@ -157,7 +121,7 @@ int main(int argc, char** argv) {
 
     int n = 0;
     for (const auto& style : music_styles) {
-        if (style.compare(0, 4, audio_file)) {
+        if (audio_file.compare(2, 4, style) == 0) {
             features << n << " " << std::flush;
             break;
         } else { ++n; }
@@ -166,9 +130,13 @@ int main(int argc, char** argv) {
         features << "-1 " << std::flush;
     }
 
-    for (int i = 0; i < FFT_SIZE * 2; i++) {
-        features << i << ":" << mean[int(i / 2)] << " ";
-        features << i << ":" << sigma[int(i / 2)] << " ";
+    for (int i = 1; i < FFT_SIZE + 1; i++) {
+        features << i << ":" << mean[i - 1] << " ";
+        //features << mean[i - 1] << ",";
+    }
+    for (int i = 1; i < FFT_SIZE + 1; i++) {
+        features << i + 512 << ":" << sigma[i - 1] << " ";
+        //features << sigma[i - 1] << ",";
     }
     features << std::endl;
 
