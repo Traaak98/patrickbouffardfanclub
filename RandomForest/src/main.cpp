@@ -35,7 +35,7 @@ Data* load_data_from_file(std::ifstream& data_file) {
         if (colonPos != std::string::npos) {
             int index = std::stoi(token.substr(0, colonPos));
             float value = std::stof(token.substr(colonPos + 1));
-            data->values[index+1] = value;
+            data->values[index] = value;
         }
     }
 
