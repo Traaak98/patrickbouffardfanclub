@@ -18,6 +18,7 @@ struct svm_model *model;
 
 std::ofstream train("../data/dataset_train.csv");
 std::ofstream test("../data/dataset_test.csv");
+
 // label index1:value1 index2:value2 ... \n
 
 void dataset_to_csv(std::ofstream& out_dataset1, std::ofstream& out_dataset2) {
@@ -228,11 +229,6 @@ int main(int argc, char** argv) {
     formater_dataset(train, test);
     // svm(results_data, results_labels, labels_map);
     // do_cross_validation();
-<<<<<<< HEAD
-    //formater_dataset(train, test);
-    dataset_to_csv(train, test);
-=======
->>>>>>> f21ec76eebee3ed0b52ffa7e9ac0d156a85bba21
 
     return 0;
 }
