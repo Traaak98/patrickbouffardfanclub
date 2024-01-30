@@ -19,11 +19,8 @@
 #include "random_forest.h"
 #include "decision_tree.h"
 
-struct svm_node *x_space;
-struct svm_model *model;
-
-void CNN(const float* data, std::map<int, std::string> labels_map);
-void SVM(const float* data, std::map<int, std::string> labels_map);
+void CNN(float* data, std::map<int, std::string> labels_map);
+void SVM(float* data, std::map<int, std::string> labels_map);
 void RF(float* data, std::map<int, std::string> labels_map);
 void DT(float* data, std::map<int, std::string> labels_map);
 
@@ -86,12 +83,9 @@ int main(int argc, char** argv) {
 }
 
 void CNN(float* data, std::map<int, std::string> labels_map){
-
-
-    // Build vectors data
-
-    std::cout << "Data built" << std::endl;
-
+    std::cout << std::endl;
+    std::cout << "CNN" << std::endl;
+    std::cout << std::endl;
     // Construire le modèle CNN
     std::unique_ptr<tflite::FlatBufferModel> model =
             tflite::FlatBufferModel::BuildFromFile("../../CNN/model/model.tflite");
@@ -106,18 +100,13 @@ void CNN(float* data, std::map<int, std::string> labels_map){
     tflite::InterpreterBuilder(*model.get(), resolver)(&interpreter);
     interpreter->AllocateTensors();
 
-    std::cout << "Model loaded" << std::endl;
-
     // Copiez les données audio dans le tenseur d'entrée du modèle
     float *inputTensor = interpreter->typed_input_tensor<float>(0);
-    std::cout << "Input tensor loaded" << std::endl;
     std::cout << interpreter->typed_input_tensor<float>(0) << std::endl;
 
     for (int i = 0; i < 1024; ++i) {
         inputTensor[i] = static_cast<float>(data[i]);
     }
-
-    std::cout << "Input tensor filled" << std::endl;
 
     // Effectuer l'inférence
     std::size_t first = getCurrentMemoryUsage();
@@ -152,10 +141,13 @@ void CNN(float* data, std::map<int, std::string> labels_map){
 }
 
 void SVM(float* data, std::map<int, std::string> labels_map){
+    std::cout << std::endl;
+    std::cout << "SVM" << std::endl;
+    std::cout << std::endl;
+    struct svm_model *model;
     model = svm_load_model("../../SVM/svm.model");
     // Allouer un tableau de svm_node
     struct svm_node *svmNodes = new svm_node[1024 + 1];  // +1 pour le dernier élément avec index = -1
-
     // Remplir le tableau svm_node avec les données
     for (int i = 0; i < 1024; ++i) {
         svmNodes[i].index = i + 1;  // L'index commence généralement à 1 dans LIBSVM
@@ -163,7 +155,7 @@ void SVM(float* data, std::map<int, std::string> labels_map){
     }
     std::size_t first = getCurrentMemoryUsage();
     auto start_time = std::chrono::high_resolution_clock::now();
-    double pred = svm_predict(model, x_space);
+    double pred = svm_predict(model, svmNodes);
     auto end_time = std::chrono::high_resolution_clock::now();
     std::size_t second = getCurrentMemoryUsage();
     auto inference_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
@@ -175,6 +167,9 @@ void SVM(float* data, std::map<int, std::string> labels_map){
 }
 
 void RF(float* data, std::map<int, std::string> labels_map){
+    std::cout << std::endl;
+    std::cout << "RF" << std::endl;
+    std::cout << std::endl;
     std::size_t first = getCurrentMemoryUsage();
     auto start_time = std::chrono::high_resolution_clock::now();
     std::int32_t j = random_forest_predict(data, 1024);
@@ -183,11 +178,14 @@ void RF(float* data, std::map<int, std::string> labels_map){
     auto inference_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
     std::cout << "Temps d'inférence : " << inference_duration.count() << " microsecondes" << std::endl;
     std::cout << "Mémoire allocation = " << second - first << " bytes." << std::endl;
-    std::cout << "Prédiction : " << labels_map[j] << std::endl;
+    std::cout << "Prédiction : " << labels_map[j + 1] << std::endl;
 
 }
 
 void DT(float* data, std::map<int, std::string> labels_map){
+    std::cout << std::endl;
+    std::cout << "DT" << std::endl;
+    std::cout << std::endl;
     std::size_t first = getCurrentMemoryUsage();
     auto start_time = std::chrono::high_resolution_clock::now();
     std::int32_t j = decision_tree_predict(data, 1024);
@@ -196,7 +194,7 @@ void DT(float* data, std::map<int, std::string> labels_map){
     auto inference_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
     std::cout << "Temps d'inférence : " << inference_duration.count() << " microsecondes" << std::endl;
     std::cout << "Mémoire allocation = " << second - first << " bytes." << std::endl;
-    std::cout << "Prédiction : " << labels_map[j] << std::endl;
+    std::cout << "Prédiction : " << labels_map[j + 1] << std::endl;
 
 }
 
