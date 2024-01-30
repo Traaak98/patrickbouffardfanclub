@@ -14,7 +14,7 @@ file(# liste des fichiers à compiler
 include_directories(../../CNN/model ../../RandomForest ../../DecisionTree/src ../../SVM)
 
 add_subdirectory(
-    "/media/apolline/B2C2CC8EC2CC586D/apolline/Ecole/ENSTA/M2/tensorflow/tensorflow_src/tensorflow/lite"
+    "/home/clara/tensorflow_src/tensorflow/lite"
     "${CMAKE_CURRENT_BINARY_DIR}/tensorflow-lite" EXCLUDE_FROM_ALL)
 
 add_executable(${PROJECT_NAME} ${source_files})
