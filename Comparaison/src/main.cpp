@@ -14,12 +14,20 @@
 #include <string>
 #include <chrono>
 #include "svm.h"
+#include <memory>
+#include <sys/resource.h>
+#include "random_forest.h"
+#include "decision_tree.h"
 
 struct svm_node *x_space;
 struct svm_model *model;
 
-void CNN(std::vector<double> data, std::map<int, std::string> labels_map);
-void SVM(std::vector<double> data, std::map<int, std::string> labels_map);
+void CNN(const float* data, std::map<int, std::string> labels_map);
+void SVM(const float* data, std::map<int, std::string> labels_map);
+void RF(float* data, std::map<int, std::string> labels_map);
+void DT(float* data, std::map<int, std::string> labels_map);
+
+std::size_t getCurrentMemoryUsage();
 
 int main(int argc, char** argv) {
     if (argc != 2){
@@ -53,7 +61,14 @@ int main(int argc, char** argv) {
     labels_map2[9] = "reggae";
     labels_map2[10] = "rock";
 
-    std::vector<double> data;
+    float data[1024];
+    std::string cell;
+    std::ifstream results_data_file(filename);
+
+    for (int j = 0; j < 1024; ++j){
+        std::getline(results_data_file, cell, ',');
+        data[j] = std::stof(cell);
+    }
 
     // CNN :
     CNN(data, labels_map2);
@@ -61,12 +76,16 @@ int main(int argc, char** argv) {
     // SVM :
     SVM(data, labels_map2);
 
+    // RF :
+    RF(data, labels_map2);
 
+    // DT :
+    DT(data, labels_map2);
 
     return 0;
 }
 
-void CNN(std::vector<double> data, std::map<int, std::string> labels_map){
+void CNN(float* data, std::map<int, std::string> labels_map){
 
 
     // Build vectors data
@@ -100,17 +119,15 @@ void CNN(std::vector<double> data, std::map<int, std::string> labels_map){
 
     std::cout << "Input tensor filled" << std::endl;
 
-    // Activer le profilage quantitatif
-
-    tflite::profiling::Profiler profiler;
-    interpreter->SetProfiler(&profiler);
-
     // Effectuer l'inférence
+    std::size_t first = getCurrentMemoryUsage();
     auto start_time = std::chrono::high_resolution_clock::now();
     interpreter->Invoke();
     auto end_time = std::chrono::high_resolution_clock::now();
     auto inference_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    std::size_t second = getCurrentMemoryUsage();
     std::cout << "Temps d'inférence : " << inference_duration.count() << " microsecondes" << std::endl;
+    std::cout << "Mémoire allocation = " << second - first << " bytes." << std::endl;
     std::cout << "Inference done" << std::endl;
 
     // Récupérer les résultats de la prédiction
@@ -134,7 +151,7 @@ void CNN(std::vector<double> data, std::map<int, std::string> labels_map){
     }
 }
 
-void SVM(std::vector<double> data, std::map<int, std::string> labels_map){
+void SVM(float* data, std::map<int, std::string> labels_map){
     model = svm_load_model("../../SVM/svm.model");
     // Allouer un tableau de svm_node
     struct svm_node *svmNodes = new svm_node[1024 + 1];  // +1 pour le dernier élément avec index = -1
@@ -144,12 +161,56 @@ void SVM(std::vector<double> data, std::map<int, std::string> labels_map){
         svmNodes[i].index = i + 1;  // L'index commence généralement à 1 dans LIBSVM
         svmNodes[i].value = data[i];
     }
+    std::size_t first = getCurrentMemoryUsage();
     auto start_time = std::chrono::high_resolution_clock::now();
     double pred = svm_predict(model, x_space);
     auto end_time = std::chrono::high_resolution_clock::now();
+    std::size_t second = getCurrentMemoryUsage();
     auto inference_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
     std::cout << "Temps d'inférence : " << inference_duration.count() << " microsecondes" << std::endl;
+    std::cout << "Mémoire allocation = " << second - first << " bytes." << std::endl;
     std::cout << "Inference done" << std::endl;
-    std::cout << "Prédiction : " << pred << " " << labels_map[int(pred)]<< std::endl;
+    std::cout << "Prédiction : " << labels_map[int(pred)]<< std::endl;
 
+}
+
+void RF(float* data, std::map<int, std::string> labels_map){
+    std::size_t first = getCurrentMemoryUsage();
+    auto start_time = std::chrono::high_resolution_clock::now();
+    std::int32_t j = random_forest_predict(data, 1024);
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::size_t second = getCurrentMemoryUsage();
+    auto inference_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    std::cout << "Temps d'inférence : " << inference_duration.count() << " microsecondes" << std::endl;
+    std::cout << "Mémoire allocation = " << second - first << " bytes." << std::endl;
+    std::cout << "Prédiction : " << labels_map[j] << std::endl;
+
+}
+
+void DT(float* data, std::map<int, std::string> labels_map){
+    std::size_t first = getCurrentMemoryUsage();
+    auto start_time = std::chrono::high_resolution_clock::now();
+    std::int32_t j = decision_tree_predict(data, 1024);
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::size_t second = getCurrentMemoryUsage();
+    auto inference_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    std::cout << "Temps d'inférence : " << inference_duration.count() << " microsecondes" << std::endl;
+    std::cout << "Mémoire allocation = " << second - first << " bytes." << std::endl;
+    std::cout << "Prédiction : " << labels_map[j] << std::endl;
+
+}
+
+
+std::size_t getCurrentMemoryUsage() {
+    // Utiliser la bibliothèque standard C++ pour allouer et libérer de la mémoire
+    void* dummy_memory = malloc(1); // Allouer une petite quantité de mémoire
+    free(dummy_memory); // Libérer la mémoire
+
+    // Utiliser getrusage pour mesurer la mémoire résidente
+    struct rusage usage;
+    if (getrusage(RUSAGE_SELF, &usage) == 0) {
+        return static_cast<std::size_t>(usage.ru_maxrss);
+    }
+
+    return 0;
 }

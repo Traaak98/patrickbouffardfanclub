@@ -18,7 +18,7 @@ struct svm_model *model;
 
 std::ofstream train("../data/dataset_train.csv");
 std::ofstream test("../data/dataset_test.csv");
->>>>>>> 09c86667a719976cf494ec2fdb1884b9e562690a
+
 // label index1:value1 index2:value2 ... \n
 
 void dataset_to_csv(std::ofstream& out_dataset1, std::ofstream& out_dataset2) {
