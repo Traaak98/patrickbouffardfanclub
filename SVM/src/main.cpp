@@ -16,7 +16,7 @@ struct svm_model *model;
 
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 
-std::ofstream train("../data/dataset_train.csv");
+std::ofstream train("../data/country_test.scaled");
 std::ofstream test("../data/dataset_test.csv");
 
 // label index1:value1 index2:value2 ... \n
@@ -62,10 +62,18 @@ void dataset_to_csv(std::ofstream& out_dataset1, std::ofstream& out_dataset2) {
 }
 
 void formater_dataset(std::ofstream& out_dataset1, std::ofstream& out_dataset2){
-    std::ifstream results_data_file("../data/dataset.csv");
+    std::ifstream results_data_file("../../Audio/country_test.csv");
 
     std::string cell;
+    out_dataset1 << "2 " << std::flush;
+    for (int j = 0; j < 1024; ++j) {
+        std::getline(results_data_file, cell, ',');
+        out_dataset1 << j + 1 << ":" << std::stod(cell) << " ";
+    }
+    std::getline(results_data_file, cell, '\n');    // audio filename
+    out_dataset1 << std::endl;
 
+    return;
     for (int classe = 0; classe < 10; ++classe) {
         for (int i = 0; i < 67; ++i) {
             out_dataset1 << classe << " ";
